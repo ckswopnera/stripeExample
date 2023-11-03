@@ -20,15 +20,13 @@ import {
   ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
 import CreditCard_Screen from './components/CreditCard_Screen';
-
+import {PUBLISHABLE_KEY} from '@env';
 
 const windowHeight = Dimensions.get('window').height;
 const windowWidth = Dimensions.get('window').width;
 
 const App = () => {
-  const publishableKey =
-    'pk_test_51Nx9flSEDYmWo5gJoPuXFCUBHx0bdmWHIb6dncqFJopRGLuvc7kDHvQJai9LXd9XO4T7e5oHlutAFnyIsZyTmxxz00c8dI4yWk';
-  const isDarkMode = useColorScheme() === 'dark';
+   const isDarkMode = useColorScheme() === 'dark';
 
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
@@ -38,7 +36,7 @@ useEffect(() => {
 }, [])
   return (
     <StripeProvider
-      publishableKey={publishableKey}
+      publishableKey={PUBLISHABLE_KEY.toString()}
       merchantIdentifier="merchant.identifier" // required for Apple Pay
       urlScheme="your-url-scheme" // required for 3D Secure and bank redirects
     >
