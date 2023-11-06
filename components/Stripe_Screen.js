@@ -1,6 +1,7 @@
 /* eslint-disable prettier/prettier */
 /*global Stripe_Screen,*/
 /*eslint no-undef: "error"*/
+
 import React, {useContext, useEffect, useState} from 'react';
 import {
   CardField,
@@ -523,7 +524,7 @@ export default Stripe_Screen = () => {
                   withCloseButton={true}
                   theme={isdarkMode === true ? DARK_THEME : null}
                   withFilter={true}
-                  // onClose={()=>}
+                  onClose={()=>setisvisible(false)}
                   onSelect={value => {
                     // console.log({value});
                     setCountry({
