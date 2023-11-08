@@ -10,7 +10,7 @@ import {
  Platform,
 } from 'react-native';
 import Stripe_Screen from './components/Stripe_Screen';
-import {StripeProvider} from '@stripe/stripe-react-native';
+import {AddressSheet, StripeProvider} from '@stripe/stripe-react-native';
 import {colors} from './utils/colors';
 import {
   Colors,
@@ -45,6 +45,7 @@ useEffect(() => {
           barStyle={isDarkMode ? 'light-content' : 'dark-content'}
           backgroundColor={backgroundStyle.backgroundColor}
         />
+         
         <Stripe_Screen />
         {/* <CreditCard_Screen/> */}
 

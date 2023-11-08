@@ -11,6 +11,7 @@ import {
   usePlatformPay,
   PlatformPayButton,
   PlatformPay,
+  AddressSheet,
 } from '@stripe/stripe-react-native';
 import {
   Text,
@@ -50,7 +51,6 @@ const windowWidth = Dimensions.get('window').width;
 
 export default Stripe_Screen = () => {
   const [card, setCard] = useState(CardFieldInput.Details | null);
-  const {confirmPayment, handleCardAction} = useStripe();
   const isDarkMode = useColorScheme() === 'dark';
   const [isdarkMode, setisdarkMode] = useState(isDarkMode);
   const [focusedField, setfocusedField] = useState();
@@ -61,57 +61,62 @@ export default Stripe_Screen = () => {
   const [isvisible, setisvisible] = useState(false);
   const [isModal, setisModal] = useState(false);
   const [country, setCountry] = useState();
-  const [totalValues, settotalValues] = useState();
+  const [allfieldValues, setallfieldValues] = useState();
+  const [paymentIntent, setPaymentIntent] = useState(null);
 
   const handlePayment = async () => {
     try {
       const {paymentMethod, error} = await createPaymentMethod({
         paymentMethodType: 'Card',
-        card: {
-          cardNumber: card?.number, // Replace with the actual card details
-          expMonth: card?.expiryMonth,
-          expYear: card?.expiryYear,
-          cvc: card?.cvc,
-        },
+        // card: {
+        //   cardNumber: card?.number, // Replace with the actual card details
+        //   expMonth: card?.expiryMonth,
+        //   expYear: card?.expiryYear,
+        //   cvc: card?.cvc,
+        // },
       });
       // console.log({card});
       if (error) {
         console.error('Error:', error.message);
       } else {
         const cardBrand = paymentMethod?.Card?.brand;
-        console.log('type', paymentMethod?.Card?.funding);
-        // let cardType;
-        if (
-          cardBrand === 'Visa' ||
-          cardBrand === 'MasterCard' ||
-          cardBrand === 'Discover' ||
-          cardBrand === 'American Express'
-        ) {
-          // It's a credit card
-          console.log('Credit Card:', cardBrand);
-        } else {
-          // It's a debit card or another card type
-          console.log('Debit Card or Other:', cardBrand);
-        }
-
-        // switch (cardBrand) {
-        //   case 'visa':
-        //   case 'mastercard':
-        //     cardType = 'Credit Card';
-        //     break;
-        //   default:
-        //     cardType = 'Debit Card';
-        //     break;
-        // }
-
-        // console.log(`Card Type: ${cardType}`);
+        console.log(
+          'type',
+          paymentMethod?.Card?.funding + ' ' + paymentMethod?.Card?.brand,
+        );
       }
     } catch (error) {
       console.error('Error:', error);
     }
     Alert.alert('Success!');
   };
+  // useEffect(() => {
+  //   if (!paymentIntent) {
+  //     fetch('https://your-server/create-payment-intent')
+  //       .then((response) => response.json())
+  //       .then((data) => {
+  //         setPaymentIntent(data.paymentIntent);
+  //       });
+  //   }
+  // }, [paymentIntent]);
+  // const handlePayment = async (elements) => {
+  //   setLoading(true);
 
+  //   const { error } = await stripe.confirmPayment({
+  //     paymentIntent,
+  //     billingAddress: elements.getElement('billingAddress').getAddress(),
+  //     shippingAddress: elements.getElement('shippingAddress').getAddress(),
+  //     savePaymentMethod: true,
+  //   });
+
+  //   if (error) {
+  //     console.error(error);
+  //   } else {
+  //     console.log('Payment successful!');
+  //   }
+
+  //   setLoading(false);
+  // };
   useEffect(() => {
     setisdarkMode(isDarkMode);
   }, [isDarkMode]);
@@ -123,16 +128,18 @@ export default Stripe_Screen = () => {
         width: windowWidth,
         flexDirection: 'column',
       }}>
-      {/* <Image
-        source={require('../assets/atm_card1.png')}
-        style={{
-          width: windowWidth,
-          height: windowWidth,
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-        resizeMode="contain"
-      /> */}
+      {/* {card?.complete === true && (
+        <AddressSheet
+          visible={true}
+          onAddressCollected={address => {
+            console.log(address);
+          }}
+          onSubmit={address => {
+            console.log(address);
+          }}
+        />
+      )} */}
+
       <ImageBackground
         source={require('../assets/card_front.png')}
         resizeMode="stretch"
@@ -185,7 +192,13 @@ export default Stripe_Screen = () => {
           height={50}
         />
         <Text style={styles.validThrough}>Valid Through</Text>
-        {focusedField==='ExpiryDate'&&(<View style={[styles.validThrough,{width:90,height:1,backgroundColor:'#fff'}]}></View>)}
+        {focusedField === 'ExpiryDate' && (
+          <View
+            style={[
+              styles.validThrough,
+              {width: 90, height: 1, backgroundColor: '#fff'},
+            ]}></View>
+        )}
         <Text
           style={[
             styles.validThroughDetails,
@@ -207,7 +220,13 @@ export default Stripe_Screen = () => {
             : `${card?.expiryMonth} / ${card?.expiryYear}`}
         </Text>
         <Text style={styles.cvcStyle}>CVC</Text>
-        {focusedField==='Cvc'&&(<View style={[styles.cvcStyle,{width:25,height:1,backgroundColor:'#fff'}]}></View>)}
+        {focusedField === 'Cvc' && (
+          <View
+            style={[
+              styles.cvcStyle,
+              {width: 25, height: 1, backgroundColor: '#fff'},
+            ]}></View>
+        )}
         <Text
           style={[
             styles.cvcDetails,
@@ -228,6 +247,7 @@ export default Stripe_Screen = () => {
           }}
         />
       </ImageBackground>
+
       <Formik
         initialValues={{
           name: '',
@@ -235,16 +255,30 @@ export default Stripe_Screen = () => {
           // password: '',
           country: '',
           card: false,
+          address: '',
+          address2: '',
+          city: '',
+          pincode: '',
+          state: '',
+          phonenumber: '',
         }}
         validationSchema={Yup.object().shape({
           name: Yup.string()
             .min(2, 'Name must be at least 2 characters')
-            .required('Name is required'),
+            .required('*required'),
+          address: Yup.string().required('*required'),
+          address2: Yup.string().notRequired('address is optional'),
+          city: Yup.string().required('*required'),
+          pincode: Yup.string()
+            .min(4, 'Pin code at least 4 characters')
+            .required('*required'),
+          state: Yup.string().required('*required'),
           email: Yup.string()
             .email('Invalid email')
-            .required('Email is required'),
+            .required('*required'),
+          phonenumber: Yup.string().notRequired('phone number is optional'),
           // password: Yup.string().min(6, 'Password must be at least 6 characters').required('Password is required'),
-          country: Yup.string().required('Country is required'),
+          country: Yup.string().required('*required'),
           card: Yup.boolean()
             .oneOf([true], 'Please check the card information.')
             .required('Card information is required'),
@@ -253,7 +287,7 @@ export default Stripe_Screen = () => {
           // Handle form submission here
           console.log('Form data submitted:', values);
           handlePayment();
-          settotalValues(values);
+          setallfieldValues(values);
         }}>
         {({
           handleChange,
@@ -264,81 +298,6 @@ export default Stripe_Screen = () => {
           touched,
         }) => (
           <>
-            {/* <View
-              style={{
-                alignItems: 'flex-start',
-                width: windowWidth - 8,
-                justifyContent: 'flex-start',
-                marginVertical: 6,
-              }}>
-              <Text
-                style={{
-                  color:
-                    isDarkMode === true ? Colors.lighter : 'rgba(0,0,0,0.6)',
-                  padding: 4,
-                }}>
-                Password
-              </Text>
-              <TextInput
-                onChangeText={handleChange('password')}
-                onBlur={handleBlur('password')}
-                value={values.password}
-                secureTextEntry
-                keyboardType="email-address"
-                cursorColor={isdarkMode === true ? '#fff' : '#000'}
-                style={{
-                  color:
-                    isdarkMode === true
-                      ? colors.dark_textColor
-                      : colors.light_textColor,
-                  borderColor:
-                    isdarkMode === true ? colors.dark_borderColor : 'grey',
-                  borderRadius: 8,
-                  borderWidth: 1,
-                  width: '100%',
-                  paddingStart: 14,
-                }}
-              />
-              {touched.password && errors.password && <Text style={{ color: 'red' }}>{errors.password}</Text>}
-            </View> */}
-            <View
-              style={{
-                alignItems: 'flex-start',
-                width: windowWidth - 8,
-                justifyContent: 'flex-start',
-                marginVertical: 6,
-              }}>
-              <Text
-                style={{
-                  color:
-                    isDarkMode === true ? Colors.lighter : 'rgba(0,0,0,0.6)',
-                  padding: 4,
-                }}>
-                Email
-              </Text>
-              <TextInput
-                onChangeText={handleChange('email')}
-                onBlur={handleBlur('email')}
-                value={values.email}
-                keyboardType="email-address"
-                cursorColor={isdarkMode === true ? '#fff' : '#000'}
-                style={{
-                  color:
-                    isdarkMode === true
-                      ? colors.dark_textColor
-                      : colors.light_textColor,
-                  borderColor:
-                    isdarkMode === true ? colors.dark_borderColor : 'grey',
-                  borderRadius: 8,
-                  borderWidth: 1,
-                  width: '100%',
-                  paddingStart: 14,
-                }}
-              />
-              {touched.email && errors.email && (
-                <Text style={{color: 'red'}}>{errors.email}</Text>
-              )}
-            </View>
             <View
               style={{
                 alignItems: 'flex-start',
@@ -409,69 +368,128 @@ export default Stripe_Screen = () => {
                 <Text style={{color: 'red'}}>{errors.card}</Text>
               )}
             </View>
-            {/* <CardForm
-        defaultValues={{countryCode: 'IN'}}
-        onFormComplete={cardDetails => {
-          console.log('card form details', cardDetails);
-          setCard(cardDetails);
-        }}
-        // onFocus={focusedField => {
-        //   console.log('focusField', focusedField);
-        // }}
-        dangerouslyGetFullCardDetails={true}
-        postalCodeEnabled={false}
-        placeholders={{
-          number: 'Card number',
-          expiration: 'MM/YY',
-          cvc: 'CVC',
-        }}
-        cardStyle={{
-          backgroundColor:
-            isdarkMode === true
-              ? colors.dark_backgroundColor
-              : colors.light_backgroundColor,
-          textColor:
-            isdarkMode === true ? colors.dark_textColor : colors.light_textColor,
-          borderColor:
-            isdarkMode === true
-              ? colors.dark_borderColor
-              : colors.light_borderColor,
-          borderRadius: 8,
-          borderWidth: 1,
-          textErrorColor: colors.textErrorColor,
-          placeholderColor: colors.placeholderColor,
-          cursorColor: isdarkMode === true ? '#ffffff' : '#000000',
-        }}
-        autofocus={false}
-        style={{
-          width: windowWidth - 8,
-          height: 200,
-          marginHorizontal: 20,
-          // backgroundColor:'red',
-          // color:'red',
-        }}
-      />  */}
             <View
               style={{
                 alignItems: 'flex-start',
                 width: windowWidth - 8,
                 justifyContent: 'flex-start',
-                marginTop: 8,
-                marginBottom: 6,
-                // height:40
+                padding: 4,
+                marginTop: 6,
               }}>
               <Text
                 style={{
                   color:
                     isDarkMode === true ? Colors.lighter : 'rgba(0,0,0,0.6)',
-                  padding: 4,
                 }}>
-                Name on card
+                Billing information
               </Text>
+            </View>
+            <View
+              style={{
+                width: windowWidth - 8,
+                marginVertical: 6,
+                borderColor:
+                  isdarkMode === true ? colors.dark_borderColor : 'grey',
+                borderRadius: 8,
+                borderWidth: 1,
+              }}>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  width: '100%',
+                  alignItems: 'center',
+                  justifyContent: 'flex-start',
+                }}>
+                <TextInput
+                  placeholder="Full Name"
+                  onChangeText={handleChange('name')}
+                  onBlur={handleBlur('name')}
+                  value={values.name}
+                  cursorColor={isdarkMode === true ? '#fff' : '#000'}
+                  style={{
+                    color:
+                      isdarkMode === true
+                        ? colors.dark_textColor
+                        : colors.light_textColor,
+
+                    width: '80%',
+                    paddingStart: 14,
+                  }}
+                />
+                {touched.name && errors.name && (
+                  <Text style={{color: 'red', textAlign: 'center'}}>
+                    {errors.name}
+                  </Text>
+                )}
+              </View>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  width: '100%',
+                  alignItems: 'center',
+                  justifyContent: 'flex-start',
+                  borderColor:
+                    isdarkMode === true ? colors.dark_borderColor : 'grey',
+
+                  borderTopWidth: 1,
+                }}>
+                <TextInput
+                  placeholder="Email"
+                  onChangeText={handleChange('email')}
+                  onBlur={handleBlur('email')}
+                  value={values.email}
+                  keyboardType="email-address"
+                  cursorColor={isdarkMode === true ? '#fff' : '#000'}
+                  style={{
+                    color:
+                      isdarkMode === true
+                        ? colors.dark_textColor
+                        : colors.light_textColor,
+
+                    width: '80%',
+                    paddingStart: 14,
+                  }}
+                />
+                {touched.email && errors.email && (
+                  <Text style={{color: 'red', textAlign: 'center'}}>
+                    {errors.email}
+                  </Text>
+                )}
+              </View>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  width: '100%',
+                  alignItems: 'center',
+                  justifyContent: 'flex-start',
+                  borderColor:
+                    isdarkMode === true ? colors.dark_borderColor : 'grey',
+
+                  borderTopWidth: 1,
+                }}>
               <TextInput
-                onChangeText={handleChange('name')}
-                onBlur={handleBlur('name')}
-                value={values.name}
+                placeholder="Address line 1"
+                onChangeText={handleChange('address')}
+                onBlur={handleBlur('address')}
+                value={values.address}
+                cursorColor={isdarkMode === true ? '#fff' : '#000'}
+                style={{
+                  color:
+                    isdarkMode === true
+                      ? colors.dark_textColor
+                      : colors.light_textColor,
+                  width: '80%',
+                  paddingStart: 14,
+                }}
+              />
+              {touched.address && errors.address && (
+                <Text style={{color: 'red', textAlign: 'center'}}>{errors.address}</Text>
+              )}</View>
+              <TextInput
+                placeholder="Address line 2"
+                onChangeText={handleChange('address2')}
+                onBlur={handleBlur('address2')}
+                value={values.address2}
                 cursorColor={isdarkMode === true ? '#fff' : '#000'}
                 style={{
                   color:
@@ -480,80 +498,204 @@ export default Stripe_Screen = () => {
                       : colors.light_textColor,
                   borderColor:
                     isdarkMode === true ? colors.dark_borderColor : 'grey',
-                  borderRadius: 8,
-                  borderWidth: 1,
+
+                  borderTopWidth: 1,
                   width: '100%',
                   paddingStart: 14,
                 }}
               />
-              {touched.name && errors.name && (
-                <Text style={{color: 'red'}}>{errors.name}</Text>
+              {touched.address2 && errors.address2 && (
+                <Text style={{color: 'red'}}>{errors.address2}</Text>
               )}
-            </View>
-            <View
-              style={{
-                alignItems: 'flex-start',
-                width: windowWidth - 8,
-                justifyContent: 'flex-start',
-                marginTop: 8,
-                marginBottom: 6,
-              }}>
-              <Text
-                style={{
-                  color:
-                    isDarkMode === true ? Colors.lighter : 'rgba(0,0,0,0.6)',
-                  padding: 4,
-                }}>
-                Country or region
-              </Text>
+              <View style={{flexDirection: 'row',borderTopWidth: 1,borderColor:
+                      isdarkMode === true ? colors.dark_borderColor : 'grey',}}>
+                <View
+                  style={{
+                    
+                    borderRightWidth: 1,
+                    width: '50%',
+                    borderColor:
+                      isdarkMode === true ? colors.dark_borderColor : 'grey',
+                      flexDirection:'row',alignItems:'center',justifyContent:'space-between'
+                  }}>
+                  <TextInput
+                    placeholder="City"
+                    onChangeText={handleChange('city')}
+                    onBlur={handleBlur('city')}
+                    value={values.city}
+                    cursorColor={isdarkMode === true ? '#fff' : '#000'}
+                    style={{
+                      color:
+                        isdarkMode === true
+                          ? colors.dark_textColor
+                          : colors.light_textColor,
+                      paddingStart: 14,
+                      width:'70%'
+                    }}
+                  />
+                  {touched.city && errors.city && (
+                    <Text style={{color: 'red', textAlign: 'center',right:2}}>{errors.city}</Text>
+                  )}
+                </View>
+                <View
+                  style={{
+                    width: '50%',
+                      flexDirection:'row',alignItems:'center',justifyContent:'space-between'
+
+                  }}>
+                  <TextInput
+                    placeholder="Pin Code"
+                    onChangeText={handleChange('pincode')}
+                    keyboardType='number-pad'
+                    onBlur={handleBlur('pincode')}
+                    value={values.pincode}
+                    cursorColor={isdarkMode === true ? '#fff' : '#000'}
+                    style={{
+                      color:
+                        isdarkMode === true
+                          ? colors.dark_textColor
+                          : colors.light_textColor,
+                      paddingStart: 14,
+                      width:'70%'
+                    }}
+                  />
+                  {touched.pincode && errors.pincode && (
+                    <Text style={{color: 'red', textAlign: 'center',right:2}}>{errors.pincode}</Text>
+                  )}
+                </View>
+              </View>
               <View
                 style={{
                   flexDirection: 'row',
                   width: '100%',
-                  height: 40,
+                  height: 60,
                   borderColor:
                     isdarkMode === true ? colors.dark_borderColor : 'grey',
-                  borderRadius: 8,
-                  borderWidth: 1,
+                  borderTopWidth: 1,
                   alignItems: 'center',
+                  paddingVertical: 2,
+                  // justifyContent:'flex-start'
                 }}>
-                <CountryPicker
-                  containerButtonStyle={{
-                    width: windowWidth - 50,
-                    marginLeft: 10,
-                  }}
-                  placeholder={country?.countryName}
-                  visible={isvisible}
-                  withCloseButton={true}
-                  theme={isdarkMode === true ? DARK_THEME : null}
-                  withFilter={true}
-                  onClose={() => setisvisible(false)}
-                  onSelect={value => {
-                    // console.log({value});
-                    setCountry({
-                      cca2: value?.cca2,
-                      callingCode: value?.callingCode[0],
-                      countryName: value?.name,
-                    });
-                    setisvisible(false);
-                    handleChange('country')(value?.name);
-                  }}
-                />
-                <MaterialCommunityIcons
-                  onPress={() => {
-                    isvisible === true
-                      ? setisvisible(false)
-                      : setisvisible(true);
-                  }}
-                  name={isvisible ? 'menu-up' : 'menu-down'}
-                  size={23}
-                  style={{width: 50}}
-                />
+                <View
+                  style={{
+                    flexDirection: 'column',
+                    width: '60%',
+                    height: 60,
+                    borderColor:
+                      isdarkMode === true ? colors.dark_borderColor : 'grey',
+                    borderRightWidth: 1,
+                  }}>
+                    <View style={{flexDirection:'row'}}>
+                  <Text
+                    style={{
+                      textAlign: 'left',
+                      color:
+                        isDarkMode === true
+                          ? 'rgba(255,255,255,0.4)'
+                          : 'rgba(0,0,0,0.6)',
+                      paddingLeft: 10,
+                      width: '70%',
+                    }}>
+                    Country or region
+                  </Text>
+                  {touched.country && errors.country && (
+                    <Text style={{color: 'red',}}>{errors.country}</Text>
+                  )}</View>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      width: '100%',
+                      alignItems: 'center',
+                    }}>
+                    <View style={{width: '90%'}}>
+                      <CountryPicker
+                        containerButtonStyle={{
+                          // width: '92%',
+                          paddingLeft: 10,
+                        }}
+                        placeholder={country?.countryName}
+                        visible={isvisible}
+                        withCloseButton={true}
+                        theme={isdarkMode === true ? DARK_THEME : null}
+                        withFilter={true}
+                        onClose={() => setisvisible(false)}
+                        onSelect={value => {
+                          // console.log({value});
+                          setCountry({
+                            cca2: value?.cca2,
+                            callingCode: value?.callingCode[0],
+                            countryName: value?.name,
+                          });
+                          setisvisible(false);
+                          handleChange('country')(value?.name);
+                        }}
+                      />
+                    </View>
+                    <MaterialCommunityIcons
+                      onPress={() => {
+                        isvisible === true
+                          ? setisvisible(false)
+                          : setisvisible(true);
+                      }}
+                      name={isvisible ? 'menu-up' : 'menu-down'}
+                      size={23}
+                      style={{width: '10%'}}
+                    />
+                  </View>
+                  
+                </View>
+                <View
+                  style={{
+                    width: '40%',
+                    flexDirection:'row',alignItems:'center',justifyContent:'space-between'
+                  }}>
+                  <TextInput
+                    placeholder="State"
+                    onChangeText={handleChange('state')}
+                    onBlur={handleBlur('state')}
+                    value={values.state}
+                    cursorColor={isdarkMode === true ? '#fff' : '#000'}
+                    style={{
+                      color:
+                        isdarkMode === true
+                          ? colors.dark_textColor
+                          : colors.light_textColor,
+                      paddingStart: 14,
+                      width:'70%'
+                    }}
+                  />
+                  {touched.state && errors.state && (
+                    <Text style={{color: 'red', right:12}}>
+                      {errors.state}
+                    </Text>
+                  )}
+                </View>
               </View>
-              {touched.country && errors.country && (
-                <Text style={{color: 'red'}}>{errors.country}</Text>
+              <TextInput
+                placeholder="Phone number (optional)"
+                onChangeText={handleChange('phonenumber')}
+                onBlur={handleBlur('phonenumber')}
+                value={values.phonenumber}
+                keyboardType='number-pad'
+                cursorColor={isdarkMode === true ? '#fff' : '#000'}
+                style={{
+                  color:
+                    isdarkMode === true
+                      ? colors.dark_textColor
+                      : colors.light_textColor,
+                  borderColor:
+                    isdarkMode === true ? colors.dark_borderColor : 'grey',
+
+                  borderTopWidth: 1,
+                  width: '100%',
+                  paddingStart: 14,
+                }}
+              />
+              {touched.phonenumber && errors.phonenumber && (
+                <Text style={{color: 'red'}}>{errors.phonenumber}</Text>
               )}
             </View>
+
             <TouchableOpacity
               disabled={card.complete != true ? true : false}
               onPress={() => {
@@ -580,20 +722,23 @@ export default Stripe_Screen = () => {
                 }}>
                 Pay with this card
               </Text>
-              <Ionicons name="lock-closed" 
-              size={18}
-              color=
-                    {card.complete != true && isDarkMode !== true
-                      ? 'rgba(255,255,255,0.7)'
-                      : card.complete != true
-                      ? 'rgba(255,255,255,0.2)'
-                      : '#fff' }/>
+              <Ionicons
+                name="lock-closed"
+                size={18}
+                color={
+                  card.complete != true && isDarkMode !== true
+                    ? 'rgba(255,255,255,0.7)'
+                    : card.complete != true
+                    ? 'rgba(255,255,255,0.2)'
+                    : '#fff'
+                }
+              />
             </TouchableOpacity>
           </>
         )}
       </Formik>
 
-      <View
+      {/* <View
         style={{
           width: windowWidth - 50,
           backgroundColor: colors.dark_borderColor,
@@ -635,8 +780,6 @@ export default Stripe_Screen = () => {
         // type={1000}
         type={PlatformPay.ButtonType.Pay}
         onPress={async () => {
-          // Check if Google Pay is available on the device
-          // const {deviceSupportsGooglePay} = await googlePayCheck.deviceSupportsGooglePay();
           if (await isPlatformPaySupported({googlePay: {testEnv: true}})) {
             console.log('Supported');
           } else {
@@ -645,7 +788,7 @@ export default Stripe_Screen = () => {
             // Show alternative payment options
           }
         }}
-      />
+      /> */}
     </View>
   );
 };
@@ -685,7 +828,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 50,
     left: 10,
-    color: Colors.lighter,width:100
+    color: Colors.lighter,
+    width: 100,
   },
   validThroughDetails: {
     position: 'absolute',
@@ -722,7 +866,7 @@ const styles = StyleSheet.create({
   },
   payNowButton: {
     padding: 10,
-    width: windowWidth / 2+20,
+    width: windowWidth / 2 + 20,
     borderRadius: 8,
     marginTop: 40,
     flexDirection: 'row',
