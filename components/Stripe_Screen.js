@@ -30,6 +30,7 @@ import Section from '../utils/themes';
 import {colors} from '../utils/colors';
 import {PaymentIcon} from 'react-native-payment-icons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import {Colors} from 'react-native/Libraries/NewAppScreen';
 import CountryPicker, {
   DARK_THEME,
@@ -171,9 +172,10 @@ export default Stripe_Screen = () => {
         </Text>
         <PaymentIcon
           style={styles.textCard}
-          // type='american-express'
           type={
-            card?.brand === 'AmericanExpress'
+            card?.number?.length === 0
+              ? null
+              : card?.brand === 'AmericanExpress'
               ? 'american-express'
               : card?.brand === 'DinersClub'
               ? 'diners-club'
@@ -183,6 +185,7 @@ export default Stripe_Screen = () => {
           height={50}
         />
         <Text style={styles.validThrough}>Valid Through</Text>
+        {focusedField==='ExpiryDate'&&(<View style={[styles.validThrough,{width:90,height:1,backgroundColor:'#fff'}]}></View>)}
         <Text
           style={[
             styles.validThroughDetails,
@@ -204,6 +207,7 @@ export default Stripe_Screen = () => {
             : `${card?.expiryMonth} / ${card?.expiryYear}`}
         </Text>
         <Text style={styles.cvcStyle}>CVC</Text>
+        {focusedField==='Cvc'&&(<View style={[styles.cvcStyle,{width:25,height:1,backgroundColor:'#fff'}]}></View>)}
         <Text
           style={[
             styles.cvcDetails,
@@ -245,12 +249,11 @@ export default Stripe_Screen = () => {
             .oneOf([true], 'Please check the card information.')
             .required('Card information is required'),
         })}
-
         onSubmit={values => {
           // Handle form submission here
           console.log('Form data submitted:', values);
           handlePayment();
-          settotalValues(values)
+          settotalValues(values);
         }}>
         {({
           handleChange,
@@ -524,7 +527,7 @@ export default Stripe_Screen = () => {
                   withCloseButton={true}
                   theme={isdarkMode === true ? DARK_THEME : null}
                   withFilter={true}
-                  onClose={()=>setisvisible(false)}
+                  onClose={() => setisvisible(false)}
                   onSelect={value => {
                     // console.log({value});
                     setCountry({
@@ -561,7 +564,6 @@ export default Stripe_Screen = () => {
                 styles.payNowButton,
                 {
                   backgroundColor:
-
                     card.complete != true ? 'rgba(0,0,0,0.2)' : 'grey',
                 },
               ]}>
@@ -578,6 +580,14 @@ export default Stripe_Screen = () => {
                 }}>
                 Pay with this card
               </Text>
+              <Ionicons name="lock-closed" 
+              size={18}
+              color=
+                    {card.complete != true && isDarkMode !== true
+                      ? 'rgba(255,255,255,0.7)'
+                      : card.complete != true
+                      ? 'rgba(255,255,255,0.2)'
+                      : '#fff' }/>
             </TouchableOpacity>
           </>
         )}
@@ -675,7 +685,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 50,
     left: 10,
-    color: Colors.lighter,
+    color: Colors.lighter,width:100
   },
   validThroughDetails: {
     position: 'absolute',
@@ -712,9 +722,12 @@ const styles = StyleSheet.create({
   },
   payNowButton: {
     padding: 10,
-    width: windowWidth / 2,
+    width: windowWidth / 2+20,
     borderRadius: 8,
     marginTop: 40,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-evenly',
     // position: 'absolute',
     // bottom: 120,
   },
