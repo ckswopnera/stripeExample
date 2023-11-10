@@ -47,8 +47,7 @@ import {
   withNextInputAutoFocusForm,
   withNextInputAutoFocusInput,
 } from 'react-native-formik';
-import {TextField} from 'react-native-material-textfield';
-import PhoneInput from 'react-native-phone-number-input';
+import FlipCard from 'react-native-flip-card';
 
 const windowHeight = Dimensions.get('window').height;
 const windowWidth = Dimensions.get('window').width;
@@ -67,7 +66,6 @@ export default Stripe_Screen = () => {
   const [country, setCountry] = useState();
   const [allfieldValues, setallfieldValues] = useState();
   const [paymentIntent, setPaymentIntent] = useState(null);
-  const phoneInput = useRef(null);
   const phoneRegExp =
     /^((\+[1-9]{1,4}[ -]?)|(\([0-9]{2,3}\)[ -]?)|([0-9]{2,4})[ -]?)*?[0-9]{3,4}[ -]?[0-9]{3,4}$/;
   // /^((\\+[1-9]{1,4}[ \\-]*)|(\\([0-9]{2,3}\\)[ \\-]*)|([0-9]{2,4})[ \\-]*)*?[0-9]{3,4}?[ \\-]*[0-9]{3,4}?$/;
@@ -131,7 +129,7 @@ export default Stripe_Screen = () => {
     <View
       style={{
         alignItems: 'center',
-        height: windowHeight,
+        // height: windowHeight,
         width: windowWidth,
         flexDirection: 'column',
       }}>
@@ -146,114 +144,247 @@ export default Stripe_Screen = () => {
           }}
         />
       )} */}
-
-      <ImageBackground
-        source={require('../assets/card_front.png')}
-        resizeMode="stretch"
-        style={styles.image}>
-        <Text
-          style={[
-            styles.cardText,
-            {
-              color:
-                card?.validNumber !== 'Valid' ? colors.textErrorColor : '#fff',
-            },
-          ]}>
-          {card?.number === undefined
-            ? '**** **** **** ****'
-            : card?.number === null
-            ? '**** **** **** ****'
-            : card?.number?.length !== 0 && hiddenDetails === false
-            ? card?.number?.match(/.{1,4}/g)?.join(' ')
-            : card?.number?.length !== 0 &&
-              hiddenDetails === true &&
-              // card?.number?.match(/.{1,4}/g)?.length > 0 &&
-              card?.number?.match(/.{1,4}/g)?.length === 4
-            ? `**** **** **** ${card?.number?.match(/.{1,4}/g)[3]} `
-            : card?.number?.length !== 0 &&
-              hiddenDetails === true &&
-              card?.number?.match(/.{1,4}/g)?.length === 3
-            ? '**** **** ****'
-            : card?.number?.length !== 0 &&
-              hiddenDetails === true &&
-              card?.number?.match(/.{1,4}/g)?.length === 2
-            ? '**** ****'
-            : card?.number?.length !== 0 &&
-              hiddenDetails === true &&
-              card?.number?.match(/.{1,4}/g)?.length === 1
-            ? '****'
-            : ''}
-        </Text>
-        <PaymentIcon
-          style={styles.textCard}
-          type={
-            card?.number?.length === 0
-              ? null
-              : card?.brand === 'AmericanExpress'
-              ? 'american-express'
-              : card?.brand === 'DinersClub'
-              ? 'diners-club'
-              : card?.brand?.toLowerCase()
-          }
-          width={50}
-          height={50}
-        />
-        <Text style={styles.validThrough}>Valid Through</Text>
-        {focusedField === 'ExpiryDate' && (
-          <View
+      <FlipCard
+      useNativeDriver={true}
+        friction={60}
+        perspective={3000}
+        flipHorizontal={true}
+        flipVertical={false}
+        flip={hiddenDetails}
+        clickable={false}
+        // alignWidth={true}
+        // style={{
+        //   width: windowWidth,
+        //   height: 220,
+          
+        // }}
+        >
+        <ImageBackground
+          source={require('../assets/card_front.png')}
+          resizeMode="stretch"
+          style={styles.image}>
+          <Text
             style={[
-              styles.validThrough,
-              {width: 90, height: 1, backgroundColor: '#fff'},
-            ]}></View>
-        )}
-        <Text
-          style={[
-            styles.validThroughDetails,
-            {
-              color:
-                card?.validExpiryDate !== 'Valid'
-                  ? colors.textErrorColor
-                  : '#fff',
-            },
-          ]}>
-          {card === 0 || hiddenDetails === true
-            ? '**/**'
-            : card?.expiryMonth === null && card?.expiryYear === null
-            ? '**/**'
-            : card?.expiryMonth !== null && card?.expiryYear === null
-            ? `${card?.expiryMonth}/**`
-            : card?.expiryMonth === null && card?.expiryYear !== null
-            ? `** /${card?.expiryYear}`
-            : `${card?.expiryMonth} / ${card?.expiryYear}`}
-        </Text>
-        <Text style={styles.cvcStyle}>CVC</Text>
-        {focusedField === 'Cvc' && (
-          <View
+              styles.cardText,
+              {
+                color:
+                  card?.validNumber !== 'Valid'
+                    ? colors.textErrorColor
+                    : '#fff',
+              },
+            ]}>
+            {card?.number === undefined
+              ? '**** **** **** ****'
+              : card?.number === null
+              ? '**** **** **** ****'
+              : card?.number?.length !== 0 && hiddenDetails === false
+              ? card?.number?.match(/.{1,4}/g)?.join(' ')
+              : card?.number?.length !== 0 &&
+                hiddenDetails === true &&
+                // card?.number?.match(/.{1,4}/g)?.length > 0 &&
+                card?.number?.match(/.{1,4}/g)?.length === 4
+              ? `**** **** **** ${card?.number?.match(/.{1,4}/g)[3]} `
+              : card?.number?.length !== 0 &&
+                hiddenDetails === true &&
+                card?.number?.match(/.{1,4}/g)?.length === 3
+              ? '**** **** ****'
+              : card?.number?.length !== 0 &&
+                hiddenDetails === true &&
+                card?.number?.match(/.{1,4}/g)?.length === 2
+              ? '**** ****'
+              : card?.number?.length !== 0 &&
+                hiddenDetails === true &&
+                card?.number?.match(/.{1,4}/g)?.length === 1
+              ? '****'
+              : ''}
+          </Text>
+          <PaymentIcon
+            style={styles.textCard}
+            type={
+              card?.number?.length === 0
+                ? null
+                : card?.brand === 'AmericanExpress'
+                ? 'american-express'
+                : card?.brand === 'DinersClub'
+                ? 'diners-club'
+                : card?.brand?.toLowerCase()
+            }
+            width={50}
+            height={50}
+          />
+          <Text style={styles.validThrough}>Valid Through</Text>
+          {focusedField === 'ExpiryDate' && (
+            <View
+              style={[
+                styles.validThrough,
+                {width: 90, height: 1, backgroundColor: '#fff'},
+              ]}></View>
+          )}
+          <Text
             style={[
-              styles.cvcStyle,
-              {width: 25, height: 1, backgroundColor: '#fff'},
-            ]}></View>
-        )}
-        <Text
-          style={[
-            styles.cvcDetails,
-            {color: card?.validCVC != 'Valid' ? colors.textErrorColor : '#fff'},
-          ]}>
-          {card?.validCVC === 'Valid' && hiddenDetails !== true
-            ? card?.cvc
-            : card?.validCVC === 'Incomplete' && hiddenDetails !== true
-            ? card?.cvc
-            : '***'}
-        </Text>
-        <MaterialCommunityIcons
-          name={hiddenDetails ? 'eye-off' : 'eye'}
-          size={23}
-          style={styles.hiddenIcon}
-          onPress={() => {
-            hiddenDetails ? sethiddenDetails(false) : sethiddenDetails(true);
-          }}
-        />
-      </ImageBackground>
+              styles.validThroughDetails,
+              {
+                color:
+                  card?.validExpiryDate !== 'Valid'
+                    ? colors.textErrorColor
+                    : '#fff',
+              },
+            ]}>
+            {card === 0 || hiddenDetails === true
+              ? '**/**'
+              : card?.expiryMonth === null && card?.expiryYear === null
+              ? '**/**'
+              : card?.expiryMonth !== null && card?.expiryYear === null
+              ? `${card?.expiryMonth}/**`
+              : card?.expiryMonth === null && card?.expiryYear !== null
+              ? `** /${card?.expiryYear}`
+              : `${card?.expiryMonth} / ${card?.expiryYear}`}
+          </Text>
+          <Text style={styles.cvcStyle}>CVC</Text>
+          {focusedField === 'Cvc' && (
+            <View
+              style={[
+                styles.cvcStyle,
+                {width: 25, height: 1, backgroundColor: '#fff'},
+              ]}></View>
+          )}
+          <Text
+            style={[
+              styles.cvcDetails,
+              {
+                color:
+                  card?.validCVC != 'Valid' ? colors.textErrorColor : '#fff',
+              },
+            ]}>
+            {card?.validCVC === 'Valid' && hiddenDetails !== true
+              ? card?.cvc
+              : card?.validCVC === 'Incomplete' && hiddenDetails !== true
+              ? '***'
+              :card?.cvc
+              }
+          </Text>
+          <MaterialCommunityIcons
+            name={hiddenDetails ? 'eye-off' : 'eye'}
+            size={23}
+            style={styles.hiddenIcon}
+            onPress={() => {
+              hiddenDetails ? sethiddenDetails(false) : sethiddenDetails(true);
+            }}
+          />
+        </ImageBackground>
+        <ImageBackground
+          source={require('../assets/card_front.png')}
+          resizeMode="stretch"
+          style={styles.image}>
+          <Text
+            style={[
+              styles.cardText,
+              {
+                color:
+                  card?.validNumber !== 'Valid'
+                    ? colors.textErrorColor
+                    : '#fff',
+              },
+            ]}>
+            {card?.number === undefined
+              ? '**** **** **** ****'
+              : card?.number === null
+              ? '**** **** **** ****'
+              : card?.number?.length !== 0 && hiddenDetails === false
+              ? card?.number?.match(/.{1,4}/g)?.join(' ')
+              : card?.number?.length !== 0 &&
+                hiddenDetails === true &&
+                // card?.number?.match(/.{1,4}/g)?.length > 0 &&
+                card?.number?.match(/.{1,4}/g)?.length === 4
+              ? `**** **** **** ${card?.number?.match(/.{1,4}/g)[3]} `
+              : card?.number?.length !== 0 &&
+                hiddenDetails === true &&
+                card?.number?.match(/.{1,4}/g)?.length === 3
+              ? '**** **** ****'
+              : card?.number?.length !== 0 &&
+                hiddenDetails === true &&
+                card?.number?.match(/.{1,4}/g)?.length === 2
+              ? '**** ****'
+              : card?.number?.length !== 0 &&
+                hiddenDetails === true &&
+                card?.number?.match(/.{1,4}/g)?.length === 1
+              ? '****'
+              : ''}
+          </Text>
+          <PaymentIcon
+            style={styles.textCard}
+            type={
+              card?.number?.length === 0
+                ? null
+                : card?.brand === 'AmericanExpress'
+                ? 'american-express'
+                : card?.brand === 'DinersClub'
+                ? 'diners-club'
+                : card?.brand?.toLowerCase()
+            }
+            width={50}
+            height={50}
+          />
+          <Text style={styles.validThrough}>Valid Through</Text>
+          {focusedField === 'ExpiryDate' && (
+            <View
+              style={[
+                styles.validThrough,
+                {width: 90, height: 1, backgroundColor: '#fff'},
+              ]}></View>
+          )}
+          <Text
+            style={[
+              styles.validThroughDetails,
+              {
+                color:
+                  card?.validExpiryDate !== 'Valid'
+                    ? colors.textErrorColor
+                    : '#fff',
+              },
+            ]}>
+            {card === 0 || hiddenDetails === true
+              ? '**/**'
+              : card?.expiryMonth === null && card?.expiryYear === null
+              ? '**/**'
+              : card?.expiryMonth !== null && card?.expiryYear === null
+              ? `${card?.expiryMonth}/**`
+              : card?.expiryMonth === null && card?.expiryYear !== null
+              ? `** /${card?.expiryYear}`
+              : `${card?.expiryMonth} / ${card?.expiryYear}`}
+          </Text>
+          <Text style={styles.cvcStyle}>CVC</Text>
+          {focusedField === 'Cvc' && (
+            <View
+              style={[
+                styles.cvcStyle,
+                {width: 25, height: 1, backgroundColor: '#fff'},
+              ]}></View>
+          )}
+          <Text
+            style={[
+              styles.cvcDetails,
+              {
+                color:
+                  card?.validCVC != 'Valid' ? colors.textErrorColor : '#fff',
+              },
+            ]}>
+            {card?.validCVC === 'Valid' && hiddenDetails !== true
+              ? card?.cvc
+              : card?.validCVC === 'Incomplete' && hiddenDetails !== true
+              ? card?.cvc
+              : '***'}
+          </Text>
+          <MaterialCommunityIcons
+            name={hiddenDetails ? 'eye-off' : 'eye'}
+            size={23}
+            style={styles.hiddenIcon}
+            onPress={() => {
+              hiddenDetails ? sethiddenDetails(false) : sethiddenDetails(true);
+            }}
+          />
+        </ImageBackground>
+      </FlipCard>
       <Formik
         initialValues={{
           name: '',
@@ -300,12 +431,25 @@ export default Stripe_Screen = () => {
             .oneOf([true], '*Please check the card information.')
             .required('*Card information is required'),
         })}
-        validate={value => console.log({value})}
         onSubmit={values => {
           // Handle form submission here
           console.log('Form data submitted:', values);
           handlePayment();
-          setallfieldValues(values);
+          setallfieldValues({
+            address: values?.address,
+            address2: values?.address2,
+            card: values?.card,
+            city: values?.city,
+            countrydetails: country,
+            email: values?.email,
+            name: values?.name,
+            phonenumber: `${country?.callingCode + values?.phonenumber}`,
+            pincode: values?.pincode,
+            state: values?.state,
+            carddetails: card,
+          });
+
+          console.log({allfieldValues});
         }}>
         {({
           handleChange,
@@ -383,7 +527,7 @@ export default Stripe_Screen = () => {
                 }}
               />
               {touched.card && errors.card && (
-                <Text style={{color: 'red'}}>{errors.card}</Text>
+                <Text style={{color: 'red', left: 4}}>{errors.card}</Text>
               )}
             </View>
             <View
@@ -688,7 +832,7 @@ export default Stripe_Screen = () => {
                         withAlphaFilter={true}
                         onClose={() => setisvisible(false)}
                         onSelect={value => {
-                          console.log({value});
+                          // console.log({value});
                           setCountry({
                             cca2: value?.cca2,
                             callingCode: value?.callingCode[0],
