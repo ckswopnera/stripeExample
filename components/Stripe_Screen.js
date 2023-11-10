@@ -66,6 +66,8 @@ export default Stripe_Screen = () => {
   const [country, setCountry] = useState();
   const [allfieldValues, setallfieldValues] = useState();
   const [paymentIntent, setPaymentIntent] = useState(null);
+  const [fullName, setfullName] = useState('');
+  const nameRegExp=/^(?:((([^0-9_!¡?÷?¿/\\+=@#$%ˆ&*(){}|~<>;:[\]'’,\-.\s])){1,}(['’,\-\.]){0,1}){2,}(([^0-9_!¡?÷?¿/\\+=@#$%ˆ&*(){}|~<>;:[\]'’,\-. ]))*(([ ]+){0,1}(((([^0-9_!¡?÷?¿/\\+=@#$%ˆ&*(){}|~<>;:[\]'’,\-\.\s])){1,})(['’\-,\.]){0,1}){2,}((([^0-9_!¡?÷?¿/\\+=@#$%ˆ&*(){}|~<>;:[\]'’,\-\.\s])){2,})?)*)$/ ;
   const phoneRegExp =
     /^((\+[1-9]{1,4}[ -]?)|(\([0-9]{2,3}\)[ -]?)|([0-9]{2,4})[ -]?)*?[0-9]{3,4}[ -]?[0-9]{3,4}$/;
   // /^((\\+[1-9]{1,4}[ \\-]*)|(\\([0-9]{2,3}\\)[ \\-]*)|([0-9]{2,4})[ \\-]*)*?[0-9]{3,4}?[ \\-]*[0-9]{3,4}?$/;
@@ -145,7 +147,7 @@ export default Stripe_Screen = () => {
         />
       )} */}
       <FlipCard
-      useNativeDriver={true}
+        useNativeDriver={true}
         friction={60}
         perspective={3000}
         flipHorizontal={true}
@@ -156,9 +158,9 @@ export default Stripe_Screen = () => {
         // style={{
         //   width: windowWidth,
         //   height: 220,
-          
+
         // }}
-        >
+      >
         <ImageBackground
           source={require('../assets/card_front.png')}
           resizeMode="stretch"
@@ -198,6 +200,7 @@ export default Stripe_Screen = () => {
               ? '****'
               : ''}
           </Text>
+
           <PaymentIcon
             style={styles.textCard}
             type={
@@ -260,8 +263,7 @@ export default Stripe_Screen = () => {
               ? card?.cvc
               : card?.validCVC === 'Incomplete' && hiddenDetails !== true
               ? '***'
-              :card?.cvc
-              }
+              : card?.cvc}
           </Text>
           <MaterialCommunityIcons
             name={hiddenDetails ? 'eye-off' : 'eye'}
@@ -276,6 +278,17 @@ export default Stripe_Screen = () => {
           source={require('../assets/card_front.png')}
           resizeMode="stretch"
           style={styles.image}>
+          <Text
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 10,
+              color: '#fff',
+              fontSize: 16,
+              fontWeight: '600',
+            }}>
+            {fullName}
+          </Text>
           <Text
             style={[
               styles.cardText,
@@ -401,7 +414,8 @@ export default Stripe_Screen = () => {
         }}
         validationSchema={Yup.object().shape({
           name: Yup.string()
-            .min(2, 'Name must be at least 2 characters')
+            .matches(nameRegExp, '*no special character')
+            .min(2, '*at least 2 characters')
             .required('*required'),
           address: Yup.string().required('*required'),
           address2: Yup.string().notRequired('*address is optional'),
@@ -431,6 +445,7 @@ export default Stripe_Screen = () => {
             .oneOf([true], '*Please check the card information.')
             .required('*Card information is required'),
         })}
+        // validate={(value)=>{console.log(value);setfullName(value.name.replace(/[`~0-9!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, ''))}}
         onSubmit={values => {
           // Handle form submission here
           console.log('Form data submitted:', values);
@@ -442,7 +457,10 @@ export default Stripe_Screen = () => {
             city: values?.city,
             countrydetails: country,
             email: values?.email,
-            name: values?.name,
+            name: values?.name.replace(
+              /[`~0-9!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi,
+              '',
+            ),
             phonenumber: `${country?.callingCode + values?.phonenumber}`,
             pincode: values?.pincode,
             state: values?.state,
@@ -584,7 +602,8 @@ export default Stripe_Screen = () => {
                   }}
                 />
                 {touched.name && errors.name && (
-                  <Text style={{color: 'red', textAlign: 'center'}}>
+                  <Text
+                    style={{color: 'red', textAlign: 'center', width: '20%'}}>
                     {errors.name}
                   </Text>
                 )}
