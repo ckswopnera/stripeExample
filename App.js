@@ -5,9 +5,10 @@ import {
   StatusBar,
   StyleSheet,
   useColorScheme,
- LogBox,
- KeyboardAvoidingView,
- Platform,
+  LogBox,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
 } from 'react-native';
 import Stripe_Screen from './components/Stripe_Screen';
 import {AddressSheet, StripeProvider} from '@stripe/stripe-react-native';
@@ -26,30 +27,29 @@ const windowHeight = Dimensions.get('window').height;
 const windowWidth = Dimensions.get('window').width;
 
 const App = () => {
-   const isDarkMode = useColorScheme() === 'dark';
+  const isDarkMode = useColorScheme() === 'dark';
 
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
-useEffect(() => {
-  LogBox.ignoreLogs(['stripe-react-native']);
-}, [])
+  useEffect(() => {
+    LogBox.ignoreLogs(['stripe-react-native']);
+  }, []);
   return (
     <StripeProvider
       publishableKey={PUBLISHABLE_KEY.toString()}
       merchantIdentifier="merchant.identifier" // required for Apple Pay
       urlScheme="your-url-scheme" // required for 3D Secure and bank redirects
     >
-      <SafeAreaView style={[styles.container, backgroundStyle]}>
+      <ScrollView style={[styles.container, backgroundStyle]}>
         <StatusBar
           barStyle={isDarkMode ? 'light-content' : 'dark-content'}
           backgroundColor={backgroundStyle.backgroundColor}
         />
-         
-        <Stripe_Screen />
-        {/* <CreditCard_Screen/> */}
-
-      </SafeAreaView>
+       
+          <Stripe_Screen />
+          {/* <CreditCard_Screen/> */}
+      </ScrollView>
     </StripeProvider>
   );
 };

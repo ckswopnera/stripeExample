@@ -2,7 +2,7 @@
 /*global Stripe_Screen,*/
 /*eslint no-undef: "error"*/
 
-import React, {useContext, useEffect, useState} from 'react';
+import React, {useContext, useEffect, useRef, useState} from 'react';
 import {
   CardField,
   CardFieldInput,
@@ -26,6 +26,8 @@ import {
   ImageBackground,
   TextInput,
   Modal,
+  KeyboardAvoidingView,
+  ScrollView,
 } from 'react-native';
 import Section from '../utils/themes';
 import {colors} from '../utils/colors';
@@ -39,12 +41,14 @@ import CountryPicker, {
 } from 'react-native-country-picker-modal';
 import {Field, Formik} from 'formik';
 import * as Yup from 'yup';
+import 'yup-phone-lite';
 import {
   handleTextInput,
   withNextInputAutoFocusForm,
   withNextInputAutoFocusInput,
 } from 'react-native-formik';
 import {TextField} from 'react-native-material-textfield';
+import PhoneInput from 'react-native-phone-number-input';
 
 const windowHeight = Dimensions.get('window').height;
 const windowWidth = Dimensions.get('window').width;
@@ -63,7 +67,10 @@ export default Stripe_Screen = () => {
   const [country, setCountry] = useState();
   const [allfieldValues, setallfieldValues] = useState();
   const [paymentIntent, setPaymentIntent] = useState(null);
-
+  const phoneInput = useRef(null);
+  const phoneRegExp =
+    /^((\+[1-9]{1,4}[ -]?)|(\([0-9]{2,3}\)[ -]?)|([0-9]{2,4})[ -]?)*?[0-9]{3,4}[ -]?[0-9]{3,4}$/;
+  // /^((\\+[1-9]{1,4}[ \\-]*)|(\\([0-9]{2,3}\\)[ \\-]*)|([0-9]{2,4})[ \\-]*)*?[0-9]{3,4}?[ \\-]*[0-9]{3,4}?$/;
   const handlePayment = async () => {
     try {
       const {paymentMethod, error} = await createPaymentMethod({
@@ -247,7 +254,6 @@ export default Stripe_Screen = () => {
           }}
         />
       </ImageBackground>
-
       <Formik
         initialValues={{
           name: '',
@@ -267,20 +273,34 @@ export default Stripe_Screen = () => {
             .min(2, 'Name must be at least 2 characters')
             .required('*required'),
           address: Yup.string().required('*required'),
-          address2: Yup.string().notRequired('address is optional'),
+          address2: Yup.string().notRequired('*address is optional'),
           city: Yup.string().required('*required'),
           pincode: Yup.string()
             .min(4, 'Pin code at least 4 characters')
             .required('*required'),
           state: Yup.string().required('*required'),
           email: Yup.string().email('Invalid email').required('*required'),
-          phonenumber: Yup.string().notRequired('phone number is optional'),
+          phonenumber: Yup.string()
+            .phone(
+              country?.cca2 === undefined ? 'IN' : country?.cca2,
+              country?.cca2 === undefined
+                ? '*is invalid'
+                : `*is invalid for ${country?.cca2}`,
+            )
+            .required('*required'),
+          // phonenumber: Yup.string()
+          //   .matches(phoneRegExp, '*not valid')
+          //   .min(10, '*too short')
+          //   .max(15, '*too long')
+          //   .notRequired('*phone number is optional')
+          //   .typeError("*not a phone number"),
           // password: Yup.string().min(6, 'Password must be at least 6 characters').required('Password is required'),
           country: Yup.string().required('*required'),
           card: Yup.boolean()
-            .oneOf([true], 'Please check the card information.')
-            .required('Card information is required'),
+            .oneOf([true], '*Please check the card information.')
+            .required('*Card information is required'),
         })}
+        validate={value => console.log({value})}
         onSubmit={values => {
           // Handle form submission here
           console.log('Form data submitted:', values);
@@ -403,6 +423,11 @@ export default Stripe_Screen = () => {
                   onChangeText={handleChange('name')}
                   onBlur={handleBlur('name')}
                   value={values.name}
+                  placeholderTextColor={
+                    isdarkMode === true
+                      ? colors.dark_placeholderTextColor
+                      : colors.light_textColor
+                  }
                   cursorColor={isdarkMode === true ? '#fff' : '#000'}
                   style={{
                     color:
@@ -436,6 +461,11 @@ export default Stripe_Screen = () => {
                   onChangeText={handleChange('email')}
                   onBlur={handleBlur('email')}
                   value={values.email}
+                  placeholderTextColor={
+                    isdarkMode === true
+                      ? colors.dark_placeholderTextColor
+                      : colors.light_textColor
+                  }
                   keyboardType="email-address"
                   cursorColor={isdarkMode === true ? '#fff' : '#000'}
                   style={{
@@ -470,6 +500,11 @@ export default Stripe_Screen = () => {
                   onChangeText={handleChange('address')}
                   onBlur={handleBlur('address')}
                   value={values.address}
+                  placeholderTextColor={
+                    isdarkMode === true
+                      ? colors.dark_placeholderTextColor
+                      : colors.light_textColor
+                  }
                   cursorColor={isdarkMode === true ? '#fff' : '#000'}
                   style={{
                     color:
@@ -491,6 +526,11 @@ export default Stripe_Screen = () => {
                 onChangeText={handleChange('address2')}
                 onBlur={handleBlur('address2')}
                 value={values.address2}
+                placeholderTextColor={
+                  isdarkMode === true
+                    ? colors.dark_placeholderTextColor
+                    : colors.light_textColor
+                }
                 cursorColor={isdarkMode === true ? '#fff' : '#000'}
                 style={{
                   color:
@@ -530,6 +570,11 @@ export default Stripe_Screen = () => {
                     onChangeText={handleChange('city')}
                     onBlur={handleBlur('city')}
                     value={values.city}
+                    placeholderTextColor={
+                      isdarkMode === true
+                        ? colors.dark_placeholderTextColor
+                        : colors.light_textColor
+                    }
                     cursorColor={isdarkMode === true ? '#fff' : '#000'}
                     style={{
                       color:
@@ -556,6 +601,11 @@ export default Stripe_Screen = () => {
                   <TextInput
                     placeholder="Pin Code"
                     onChangeText={handleChange('pincode')}
+                    placeholderTextColor={
+                      isdarkMode === true
+                        ? colors.dark_placeholderTextColor
+                        : colors.light_textColor
+                    }
                     keyboardType="number-pad"
                     onBlur={handleBlur('pincode')}
                     value={values.pincode}
@@ -626,11 +676,16 @@ export default Stripe_Screen = () => {
                           // width: '92%',
                           paddingLeft: 10,
                         }}
-                        placeholder={country?.countryName}
+                        // placeholder='Select Country
                         visible={isvisible}
                         withCloseButton={true}
                         theme={isdarkMode === true ? DARK_THEME : null}
+                        countryCode={country?.cca2}
+                        withCallingCode
+                        withFlag
+                        withCountryNameButton
                         withFilter={true}
+                        withAlphaFilter={true}
                         onClose={() => setisvisible(false)}
                         onSelect={value => {
                           console.log({value});
@@ -652,7 +707,10 @@ export default Stripe_Screen = () => {
                       }}
                       name={isvisible ? 'menu-up' : 'menu-down'}
                       size={23}
-                      style={{width: '10%'}}
+                      style={{
+                        width: '10%',
+                        color: isdarkMode === true ? '#fff' : '#000',
+                      }}
                     />
                   </View>
                 </View>
@@ -667,6 +725,11 @@ export default Stripe_Screen = () => {
                     placeholder="State"
                     onChangeText={handleChange('state')}
                     onBlur={handleBlur('state')}
+                    placeholderTextColor={
+                      isdarkMode === true
+                        ? colors.dark_placeholderTextColor
+                        : colors.light_textColor
+                    }
                     value={values.state}
                     cursorColor={isdarkMode === true ? '#fff' : '#000'}
                     style={{
@@ -693,19 +756,22 @@ export default Stripe_Screen = () => {
                   borderTopWidth: 1,
                   flexDirection: 'row',
                   width: '100%',
+                  height: 50,
                   alignItems: 'center',
                   justifyContent: 'flex-start',
                 }}>
-                <View
-                  style={{
-                    borderRightWidth: 1,
-                    borderColor:
-                      isdarkMode === true ? colors.dark_borderColor : 'grey',
-                    height: 50,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}>
-                  {country?.callingCode?.length !== undefined && (
+                {country?.callingCode?.length !== undefined && (
+                  <View
+                    style={{
+                      borderRightWidth: 1,
+                      borderColor:
+                        isdarkMode === true ? colors.dark_borderColor : 'grey',
+                      height: '100%',
+                      width: '12%',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      // paddingHorizontal: 2,
+                    }}>
                     <Text
                       style={{
                         color:
@@ -713,34 +779,49 @@ export default Stripe_Screen = () => {
                             ? colors.dark_textColor
                             : colors.light_textColor,
                         textAlign: 'center',
-                        paddingStart: 14,
-                    paddingEnd:4
-                        
                       }}>
                       +{country?.callingCode}
                     </Text>
+                  </View>
+                )}
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    width: '88%',
+                    alignItems: 'center',
+                    justifyContent: 'flex-start',
+                    // height: 50,
+                  }}>
+                  <TextInput
+                    placeholder="Phone number (optional)"
+                    onChangeText={handleChange('phonenumber')}
+                    onBlur={handleBlur('phonenumber')}
+                    value={values.phonenumber}
+                    keyboardType="numeric"
+                    cursorColor={isdarkMode === true ? '#fff' : '#000'}
+                    maxLength={15}
+                    style={{
+                      width: '80%',
+                      // alignItems: 'center',
+                      // height: 50,
+                      paddingStart: 8,
+                      textAlign: 'left',
+                    }}
+                  />
+
+                  {touched.phonenumber && errors.phonenumber && (
+                    <Text
+                      style={{
+                        color: 'red',
+                        textAlign: 'right',
+                        width: '20%',
+                        // left:4,
+                        right: 4,
+                      }}>
+                      {errors.phonenumber}
+                    </Text>
                   )}
                 </View>
-                <TextInput
-                  placeholder="Phone number (optional)"
-                  onChangeText={handleChange('phonenumber')}
-                  onBlur={handleBlur('phonenumber')}
-                  value={values.phonenumber}
-                  keyboardType="numeric"
-                  cursorColor={isdarkMode === true ? '#fff' : '#000'}
-                  style={{
-                    color:
-                      isdarkMode === true
-                        ? colors.dark_textColor
-                        : colors.light_textColor,
-
-                    width: '90%',
-                    paddingStart: 2,
-                  }}
-                />
-                {touched.phonenumber && errors.phonenumber && (
-                  <Text style={{color: 'red'}}>{errors.phonenumber}</Text>
-                )}
               </View>
             </View>
 

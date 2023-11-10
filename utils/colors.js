@@ -14,5 +14,6 @@ export const colors = {
   light_borderColor: '#f3f3f3',
   textErrorColor: '#ff3333',
   placeholderColor: 'grey',
+  dark_placeholderTextColor:'rgba(255,255,255,0.4)'
 };
 // 696969
