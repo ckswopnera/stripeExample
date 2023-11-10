@@ -67,8 +67,12 @@ export default Stripe_Screen = () => {
   const [allfieldValues, setallfieldValues] = useState();
   const [paymentIntent, setPaymentIntent] = useState(null);
   const [fullName, setfullName] = useState('');
-  const nameRegExp=/^(?:((([^0-9_!¡?÷?¿/\\+=@#$%ˆ&*(){}|~<>;:[\]'’,\-.\s])){1,}(['’,\-\.]){0,1}){2,}(([^0-9_!¡?÷?¿/\\+=@#$%ˆ&*(){}|~<>;:[\]'’,\-. ]))*(([ ]+){0,1}(((([^0-9_!¡?÷?¿/\\+=@#$%ˆ&*(){}|~<>;:[\]'’,\-\.\s])){1,})(['’\-,\.]){0,1}){2,}((([^0-9_!¡?÷?¿/\\+=@#$%ˆ&*(){}|~<>;:[\]'’,\-\.\s])){2,})?)*)$/ ;
-  const phoneRegExp =
+  const requiredSchema = Yup.string().required('*required');
+  const min2Schema     = Yup.string().min(2, 'Seems a bit short...');
+  const nameRegExp =
+    /^(?:((([^0-9_!¡?÷?¿/\\+=@#$%ˆ&*(){}|~<>;:[\]'’,\-.\s])){1,}(['’,\-\.]){0,1}){2,}(([^0-9_!¡?÷?¿/\\+=@#$%ˆ&*(){}|~<>;:[\]'’,\-. ]))*(([ ]+){0,1}(((([^0-9_!¡?÷?¿/\\+=@#$%ˆ&*(){}|~<>;:[\]'’,\-\.\s])){1,})(['’\-,\.]){0,1}){2,}((([^0-9_!¡?÷?¿/\\+=@#$%ˆ&*(){}|~<>;:[\]'’,\-\.\s])){2,})?)*)$/;
+  const pincodeRegExp=/^[0-9]*$/;
+    const phoneRegExp =
     /^((\+[1-9]{1,4}[ -]?)|(\([0-9]{2,3}\)[ -]?)|([0-9]{2,4})[ -]?)*?[0-9]{3,4}[ -]?[0-9]{3,4}$/;
   // /^((\\+[1-9]{1,4}[ \\-]*)|(\\([0-9]{2,3}\\)[ \\-]*)|([0-9]{2,4})[ \\-]*)*?[0-9]{3,4}?[ \\-]*[0-9]{3,4}?$/;
   const handlePayment = async () => {
@@ -279,17 +283,6 @@ export default Stripe_Screen = () => {
           resizeMode="stretch"
           style={styles.image}>
           <Text
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 10,
-              color: '#fff',
-              fontSize: 16,
-              fontWeight: '600',
-            }}>
-            {fullName}
-          </Text>
-          <Text
             style={[
               styles.cardText,
               {
@@ -413,18 +406,21 @@ export default Stripe_Screen = () => {
           phonenumber: '',
         }}
         validationSchema={Yup.object().shape({
+
           name: Yup.string()
             .matches(nameRegExp, '*no special character')
             .min(2, '*at least 2 characters')
-            .required('*required'),
-          address: Yup.string().required('*required'),
+            .concat(requiredSchema),
+          address: Yup.string().concat(requiredSchema),
           address2: Yup.string().notRequired('*address is optional'),
-          city: Yup.string().required('*required'),
+          city: Yup.string().concat(requiredSchema),
           pincode: Yup.string()
-            .min(4, 'Pin code at least 4 characters')
-            .required('*required'),
-          state: Yup.string().required('*required'),
-          email: Yup.string().email('Invalid email').required('*required'),
+          .matches(pincodeRegExp, '*no special character')
+            .min(6, '*at least 6 characters')
+            .max(9, '*too long')
+            .concat(requiredSchema),
+          state: Yup.string().concat(requiredSchema),
+          email: Yup.string().email('Invalid email').concat(requiredSchema),
           phonenumber: Yup.string()
             .phone(
               country?.cca2 === undefined ? 'IN' : country?.cca2,
@@ -432,20 +428,19 @@ export default Stripe_Screen = () => {
                 ? '*is invalid'
                 : `*is invalid for ${country?.cca2}`,
             )
-            .required('*required'),
+            .notRequired('*is optional'),
           // phonenumber: Yup.string()
           //   .matches(phoneRegExp, '*not valid')
           //   .min(10, '*too short')
           //   .max(15, '*too long')
           //   .notRequired('*phone number is optional')
           //   .typeError("*not a phone number"),
-          // password: Yup.string().min(6, 'Password must be at least 6 characters').required('Password is required'),
-          country: Yup.string().required('*required'),
+          // password: Yup.string().min(6, 'Password must be at least 6 characters'.concat(requiredSchema),
+          country: Yup.string().concat(requiredSchema),
           card: Yup.boolean()
             .oneOf([true], '*Please check the card information.')
             .required('*Card information is required'),
         })}
-        // validate={(value)=>{console.log(value);setfullName(value.name.replace(/[`~0-9!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, ''))}}
         onSubmit={values => {
           // Handle form submission here
           console.log('Form data submitted:', values);
@@ -457,10 +452,7 @@ export default Stripe_Screen = () => {
             city: values?.city,
             countrydetails: country,
             email: values?.email,
-            name: values?.name.replace(
-              /[`~0-9!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi,
-              '',
-            ),
+            name: values?.name,
             phonenumber: `${country?.callingCode + values?.phonenumber}`,
             pincode: values?.pincode,
             state: values?.state,
@@ -494,7 +486,6 @@ export default Stripe_Screen = () => {
                 Card information
               </Text>
             </View>
-
             <View
               style={{
                 alignItems: 'flex-start',
@@ -769,6 +760,7 @@ export default Stripe_Screen = () => {
                         ? colors.dark_placeholderTextColor
                         : colors.light_textColor
                     }
+                    maxLength={9}
                     keyboardType="number-pad"
                     onBlur={handleBlur('pincode')}
                     value={values.pincode}
@@ -783,7 +775,7 @@ export default Stripe_Screen = () => {
                     }}
                   />
                   {touched.pincode && errors.pincode && (
-                    <Text style={{color: 'red', textAlign: 'center', right: 2}}>
+                    <Text style={{color: 'red', textAlign: 'center', right: 2,width:'30%'}}>
                       {errors.pincode}
                     </Text>
                   )}
